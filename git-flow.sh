@@ -155,8 +155,6 @@ ACTION=$(printf "feature\nrelease\nhotfix\nQUIT" | fzf --multi --height=90% --he
 case "${ACTION}" in
     "feature")
         make_feature || exit 1
-        
-        echo "Feature"
         ;;
     "release")
         echo "Release"
