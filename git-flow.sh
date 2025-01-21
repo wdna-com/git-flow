@@ -88,14 +88,15 @@ make_feature() {
     echo ""
     if [ "${FINISH}" == "y" ] || [ "${FINISH}" == "Y" ]
     then
-        local branch_feature=$(git branch --list "feature/#*" | fzf --height=90% --header="Select a feature branch to finish" --prompt="Select: ")
-        if [[  "${branch_feature}" == "feature/#*" ]]
+        local branch_feature=$(git for-each-ref --format='%(refname:short)' refs/heads/ | grep '^feature' | fzf --height=90% --header="Select a feature branch to finish")
+        if [[ "${branch_feature}" == "feature/#*" ]]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You must select a feature branch to finish" > /dev/stderr
             exit 1
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Finishing feature branch [${COLOR_YELLOW}${branch_feature}${COLOR_END}]" > /dev/stdout
-        git flow feature finish "${branch_feature}" > /dev/null
+        local feature_number=$(echo "${branch_feature}" | grep -oP '#\K\d+')
+        git flow feature finish "#${feature_number}" > /dev/null
 
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote" > /dev/stdout
         git push -q
@@ -150,13 +151,11 @@ BRANCH_CURRENT=$(git rev-parse --abbrev-ref HEAD)
 
 
 
-ACTION=$(printf "feature\nrelease\nhotfix\nQUIT" | fzf --multi --height=90% --header="Select a flow type" --prompt="Select: ")
+ACTION=$(printf "feature\nrelease\nhotfix\nQUIT" | fzf --multi --height=90% --header="Select a flow type")
 
 case "${ACTION}" in
     "feature")
         make_feature || exit 1
-        
-        echo "Feature"
         ;;
     "release")
         echo "Release"
