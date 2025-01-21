@@ -62,6 +62,7 @@ make_feature() {
             git checkout develop
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
+        git pull -q
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Creating a new feature branch..." > /dev/stdout
         read -rp "Enter feature number: " FEATURE_NUMBER
         echo ""
