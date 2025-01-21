@@ -50,6 +50,55 @@ is_clean() {
     fi
 }
 
+make_feature() {
+    # Check if the user wants to start a new feature
+    read -n 1 -r -s -p "Do you want to create a new feature? [y/N]: " CREATE
+    if [ "${CREATE}" == "y" ] || [ "${CREATE}" == "Y" ]
+    then
+        if [ "${BRANCH_CURRENT}" != "${BRANCH_DEVELOP}" ]
+        then
+            echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Switching to [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
+            git checkout develop
+        fi
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Creating a new feature branch..." > /dev/stdout
+        read -rp "Enter feature number: " FEATURE_NUMBER
+        if [ -z "${FEATURE_NUMBER}" ]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Feature number cannot be empty" > /dev/stderr
+            exit 1
+        elif  [ ! "${FEATURE_NUMBER}" =~ ^[0-9]+$ ]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Feature number must be a number" > /dev/stderr
+            exit 1
+        else
+            echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Creating a new feature branch  [${COLOR_YELLOW}feature/#${FEATURE_NUMBER}${COLOR_END}]" > /dev/stdout
+            git flow feature start "#${FEATURE_NUMBER}"
+            echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing the new feature branch [${COLOR_YELLOW}feature/#${FEATURE_NUMBER}${COLOR_END}] to remote" > /dev/stdout
+            git flow feature publish "#${FEATURE_NUMBER}"
+            exit 0
+        fi
+    fi
+
+    # Check if the user wants to finish a feature
+    read -n 1 -r -s -p "Do you want to finish a feature? [y/N]: " FINISH
+    if [ "${FINISH}" == "y" ] || [ "${FINISH}" == "Y" ]
+    then
+        local branch_feature=$(git branch --list "feature/#*" | fzf --height=90% --header="Select a feature branch to finish" --prompt="Select: ")
+        if [ ! "${branch_feature}" ~= "feature/#*" ]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You must select a feature branch to finish" > /dev/stderr
+            exit 1
+        fi
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Finishing feature branch [${COLOR_YELLOW}${branch_feature}${COLOR_END}]" > /dev/stdout
+        git flow feature finish "${branch_feature}"
+
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote" > /dev/stdout
+        git push origin develop
+        exit 0
+    fi
+}
+
 
 # check if the required packages are installed
 SET_PKG="git git-flow xmlstarlet curl fzf"
@@ -93,7 +142,29 @@ then
     exit 1
 fi
 
+BRANCH_CURRENT=$(git rev-parse --abbrev-ref HEAD)
+
 
 
 ACTION=$(printf "feature\nrelease\nhotfix\nQUIT" | fzf --multi --height=90% --header="Select a flow type" --prompt="Select: ")
-echo -e "- [${COLOR_LIGHT_BLUE}ACTION${COLOR_END}]: ${ACTION}"
+
+case "${ACTION}" in
+    "feature")
+        make_feature || exit 1
+        
+        echo "Feature"
+        ;;
+    "release")
+        echo "Release"
+        ;;
+    "hotfix")
+        echo "Hotfix"
+        ;;
+    "QUIT")
+        echo "Quit"
+        ;;
+    *)
+        echo "Invalid option"
+        exit 1
+        ;;
+esac
