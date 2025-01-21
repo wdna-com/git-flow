@@ -73,9 +73,9 @@ make_feature() {
             exit 1
         else
             echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Creating a new feature branch  [${COLOR_YELLOW}feature/#${FEATURE_NUMBER}${COLOR_END}]" > /dev/stdout
-            git flow feature start "#${FEATURE_NUMBER}"
+            git flow feature start "#${FEATURE_NUMBER}" > /dev/null
             echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing the new feature branch [${COLOR_YELLOW}feature/#${FEATURE_NUMBER}${COLOR_END}] to remote" > /dev/stdout
-            git flow feature publish "#${FEATURE_NUMBER}"
+            git flow feature publish "#${FEATURE_NUMBER}" > /dev/null
             exit 0
         fi
     fi
@@ -91,10 +91,10 @@ make_feature() {
             exit 1
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Finishing feature branch [${COLOR_YELLOW}${branch_feature}${COLOR_END}]" > /dev/stdout
-        git flow feature finish "${branch_feature}"
+        git flow feature finish "${branch_feature}" > /dev/null
 
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote" > /dev/stdout
-        git push origin develop
+        git push -q
         exit 0
     fi
 }
