@@ -88,7 +88,7 @@ make_feature() {
     if [ "${FINISH}" == "y" ] || [ "${FINISH}" == "Y" ]
     then
         local branch_feature=$(git branch --list "feature/#*" | fzf --height=90% --header="Select a feature branch to finish" --prompt="Select: ")
-        if [ ! "${branch_feature}" ~= "feature/#*" ]
+        if [[  "${branch_feature}" == "feature/#*" ]]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You must select a feature branch to finish" > /dev/stderr
             exit 1
