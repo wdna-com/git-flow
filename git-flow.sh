@@ -89,13 +89,14 @@ make_feature() {
     if [ "${FINISH}" == "y" ] || [ "${FINISH}" == "Y" ]
     then
         local branch_feature=$(git branch --list "feature/#*" | fzf --height=90% --header="Select a feature branch to finish" --prompt="Select: ")
-        if [[  "${branch_feature}" == "feature/#*" ]]
+        if [[ "${branch_feature}" == "feature/#*" ]]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You must select a feature branch to finish" > /dev/stderr
             exit 1
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Finishing feature branch [${COLOR_YELLOW}${branch_feature}${COLOR_END}]" > /dev/stdout
-        git flow feature finish "${branch_feature}" > /dev/null
+        local feature_number=$(echo "${branch_feature}" | sed -e "s/feature\/#//")
+        git flow feature finish "${feature_number}" > /dev/null
 
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote" > /dev/stdout
         git push -q
