@@ -88,7 +88,7 @@ make_feature() {
     echo ""
     if [ "${FINISH}" == "y" ] || [ "${FINISH}" == "Y" ]
     then
-        local branch_feature=$(git branch --list "feature/#*" | fzf --height=90% --header="Select a feature branch to finish" --prompt="Select: ")
+        local branch_feature=$(git for-each-ref --format='%(refname:short)' refs/heads/ | grep '^feature' | fzf --height=90% --header="Select a feature branch to finish")
         if [[ "${branch_feature}" == "feature/#*" ]]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You must select a feature branch to finish" > /dev/stderr
@@ -151,7 +151,7 @@ BRANCH_CURRENT=$(git rev-parse --abbrev-ref HEAD)
 
 
 
-ACTION=$(printf "feature\nrelease\nhotfix\nQUIT" | fzf --multi --height=90% --header="Select a flow type" --prompt="Select: ")
+ACTION=$(printf "feature\nrelease\nhotfix\nQUIT" | fzf --multi --height=90% --header="Select a flow type")
 
 case "${ACTION}" in
     "feature")
