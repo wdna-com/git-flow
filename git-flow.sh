@@ -53,6 +53,7 @@ is_clean() {
 make_feature() {
     # Check if the user wants to start a new feature
     read -n 1 -r -s -p "Do you want to create a new feature? [y/N]: " CREATE
+    echo ""
     if [ "${CREATE}" == "y" ] || [ "${CREATE}" == "Y" ]
     then
         if [ "${BRANCH_CURRENT}" != "${BRANCH_DEVELOP}" ]
@@ -63,6 +64,7 @@ make_feature() {
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Creating a new feature branch..." > /dev/stdout
         read -rp "Enter feature number: " FEATURE_NUMBER
+        echo ""
         if [ -z "${FEATURE_NUMBER}" ]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Feature number cannot be empty" > /dev/stderr
@@ -82,6 +84,7 @@ make_feature() {
 
     # Check if the user wants to finish a feature
     read -n 1 -r -s -p "Do you want to finish a feature? [y/N]: " FINISH
+    echo ""
     if [ "${FINISH}" == "y" ] || [ "${FINISH}" == "Y" ]
     then
         local branch_feature=$(git branch --list "feature/#*" | fzf --height=90% --header="Select a feature branch to finish" --prompt="Select: ")
