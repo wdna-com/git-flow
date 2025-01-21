@@ -59,18 +59,17 @@ make_feature() {
         if [ "${BRANCH_CURRENT}" != "${BRANCH_DEVELOP}" ]
         then
             echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Switching to [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
-            git checkout develop
+            git checkout develop > /dev/null
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
-        git pull -q
+        git pull -q > /dev/null
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Creating a new feature branch..." > /dev/stdout
         read -rp "Enter feature number: " FEATURE_NUMBER
-        echo ""
         if [ -z "${FEATURE_NUMBER}" ]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Feature number cannot be empty" > /dev/stderr
             exit 1
-        elif  [ ! "${FEATURE_NUMBER}" =~ ^[0-9]+$ ]
+        elif [[ ! "${FEATURE_NUMBER}" =~ ^[0-9]+$ ]]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Feature number must be a number" > /dev/stderr
             exit 1
