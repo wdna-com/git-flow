@@ -95,8 +95,8 @@ make_feature() {
             exit 1
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Finishing feature branch [${COLOR_YELLOW}${branch_feature}${COLOR_END}]" > /dev/stdout
-        local feature_number=$(echo "${branch_feature}" | sed -e "s/features\/#//")
-        git flow feature finish "#${feature_number}" > /dev/null
+        local feature_number=$(echo "${branch_feature}" | sed -e 's/features\///')
+        git flow feature finish "${feature_number}" > /dev/null
 
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote" > /dev/stdout
         git push -q
