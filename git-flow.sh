@@ -42,12 +42,17 @@ ctrl_c() {
     exit 1
 }
 
+
+
 is_clean() {
     if [ -n "$(git status --porcelain)" ]
     then
         echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You have uncommitted changes, please commit or stash them before continue" > /dev/stderr
         exit 1
     fi
+}
+write_changelog() {
+    echo -e "$1" >> CHANGELOG.tmp
 }
 
 make_feature() {
@@ -56,10 +61,12 @@ make_feature() {
     echo ""
     if [ "${CREATE}" == "y" ] || [ "${CREATE}" == "Y" ]
     then
+        local BRANCH_CURRENT
+        BRANCH_CURRENT=$(git rev-parse --abbrev-ref HEAD)
         if [ "${BRANCH_CURRENT}" != "${BRANCH_DEVELOP}" ]
         then
             echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Switching to [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
-            git checkout develop > /dev/null
+            git checkout -q develop
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
         git pull -q > /dev/null
@@ -69,7 +76,7 @@ make_feature() {
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Feature number cannot be empty" > /dev/stderr
             exit 1
-        elif [[ ! "${FEATURE_NUMBER}" =~ ^[0-9]+$ ]]
+        elif  [[ ! "${FEATURE_NUMBER}" =~ ^[0-9]+$ ]]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Feature number must be a number" > /dev/stderr
             exit 1
@@ -87,18 +94,192 @@ make_feature() {
     echo ""
     if [ "${FINISH}" == "y" ] || [ "${FINISH}" == "Y" ]
     then
-        local branch_feature=$(git branch --list "feature/#*" | fzf --height=90% --header="Select a feature branch to finish" --prompt="Select: ")
-        if [[  "${branch_feature}" == "feature/#*" ]]
+        local branch_feature=$(git for-each-ref --format='%(refname:short)' refs/heads/ | grep '^feature' | fzf --height=90% --header="Select a feature branch to finish")
+        if [[ "${branch_feature}" != feature/#* ]]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You must select a feature branch to finish" > /dev/stderr
             exit 1
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Finishing feature branch [${COLOR_YELLOW}${branch_feature}${COLOR_END}]" > /dev/stdout
-        git flow feature finish "${branch_feature}" > /dev/null
+        local feature_number=$(echo "${branch_feature}" | grep -oP '#\K\d+')
+        git flow feature finish "#${feature_number}"
 
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote" > /dev/stdout
         git push -q
         exit 0
+    fi
+
+    # Check if the user wants to update a feature
+    read -n 1 -r -s -p "Do you want to update a feature? [y/N]: " UPDATE
+    echo ""
+    if [ "${UPDATE}" == "y" ] || [ "${UPDATE}" == "Y" ]
+    then
+        local branch_feature=$(git for-each-ref --format='%(refname:short)' refs/heads/ | grep '^feature' | fzf --height=90% --header="Select a feature branch to update")
+        if [[ "${branch_feature}" == "feature/#*" ]]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You must select a feature branch to update" > /dev/stderr
+            exit 1
+        fi
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Updating feature branch [${COLOR_YELLOW}${branch_feature}${COLOR_END}]" > /dev/stdout
+        git checkout -q "${branch_feature}"
+        git pull -q
+        # [GIT_MERGE_AUTOEDIT=no] for non interative release operation
+        GIT_MERGE_AUTOEDIT=no git merge -q develop
+        exit 0
+    fi
+}
+
+make_release() {
+    read -n 1 -r -s -p "Do you want to create a new release? [y/N]: " CREATE
+    echo ""
+    if [ "${CREATE}" == "y" ] || [ "${CREATE}" == "Y" ]
+    then
+        # Check if the user wants to start a new release
+        read -r -p "$(echo -e "- ${COLOR_YELLOW}Redmine API KEY${COLOR_END} (url: ${COLOR_YELLOW}https://redmine.wdna.com/my/account${COLOR_END}): ")" REDMINE_API_KEY
+        if [ -z "${REDMINE_API_KEY}" ]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Redmine API KEY is mandatory to continue" > /dev/stderr
+            exit 1
+        fi
+        RESPONSE=$(curl -sb -H "Content-Type: application/xml" -H "X-Redmine-API-Key: ${REDMINE_APIKEY}" "${REDMINE_URL}/issues.xml?limit=1")
+        if [ -n "${RESPONSE}" ]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Redmine API KEY is invalid" > /dev/stderr
+            exit 1
+        else
+            echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Redmine API KEY is valid" > /dev/stdout
+        fi
+        local BRANCH_CURRENT
+        BRANCH_CURRENT=$(git rev-parse --abbrev-ref HEAD)
+        if [ "${BRANCH_CURRENT}" != "${BRANCH_DEVELOP}" ]
+        then
+            echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Switching to [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
+            git checkout -q develop
+        fi
+
+        local version_old
+        version_old=$(git tag --sort=v:refname | tail -1)
+        if [ -z "${version_old}" ]
+        then
+            version_old="0.0.0"
+        fi
+        read -rp "$(echo -e "- ${COLOR_YELLOW}Current version${COLOR_END}: ${COLOR_YELLOW}${version_old}${COLOR_END}\n- ${COLOR_YELLOW}Enter release version${COLOR_END}: ")" RELEASE_VERSION
+        if [ -z "${RELEASE_VERSION}" ]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Release version cannot be empty" > /dev/stderr
+            exit 1
+        elif [[ ! "${RELEASE_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Release version must be in the format [${COLOR_YELLOW}x.x.x${COLOR_END}]" > /dev/stderr
+            exit 1
+        fi
+        echo "${SEPARATOR1}"
+
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}${BRANCH_MAIN}${COLOR_END}] branch" > /dev/stdout
+        git checkout -q "${BRANCH_MAIN}"
+        git pull -q
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
+        git checkout -q develop
+        git pull -q
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
+        git push -q origin develop
+
+        echo "${SEPARATOR1}"
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Creating a new release branch  [${COLOR_YELLOW}release/${RELEASE_VERSION}${COLOR_END}]" > /dev/stdout
+        git flow release start "${RELEASE_VERSION}" > /dev/null
+
+        if [ $? -ne 0 ]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Failed to create a new release branch" > /dev/stderr
+            exit 1
+        fi
+        # Extract git feature codes (sorted and unique only)
+        local feature_list
+        feature_list=$(git log --pretty=oneline ${BRANCH_MAIN}..HEAD | grep "Merge branch 'feature/#" | awk '{print $4}' | sed 's/feature\/#//')
+        # Remove quotes 
+        feature_list=$(echo "${feature_list}" | tr -d '"' | tr -d "'")
+        # Sort feature codes by number
+        feature_list=$(echo "${feature_list}" | sort -n | uniq)
+
+        # Generating temporary changelog ************************
+        local changelog_head changelog_tail
+        changelog_head=$(head -8 CHANGELOG.md)
+        changelog_tail=$(tail --lines=+10 CHANGELOG.md)
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Generating temporary changelog" > /dev/stdout
+        rm -f CHANGELOG.tmp
+        write_changelog "${changelog_head}"
+        write_changelog ""
+
+        # Add release version
+        write_changelog "## [${RELEASE_VERSION}] - $(date +'%Y-%m-%d')"
+        OLD_IFS=$IFS
+        export IFS="#"
+        for feature in ${feature_list}
+        do
+            if [ -n "${feature}" ]
+            then
+                local XML
+                XML=$(curl -sb -H "Content-Type: application/xml" -H "X-Redmine-API-Key: ${REDMINE_API_KEY}" "${REDMINE_URL}/issues/${feature}.xml")
+                if [ -n "$XML" ]
+                then
+                    local subject
+                    subject=$(xmlstarlet select -t -v "//issue/subject/text()" <<< "$XML" )
+                    write_changelog "- ${feature}: ${subject}"
+                else
+                    echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: cannot retrieve redmine information of the feature: [${COLOR_YELLOW}${feature}${COLOR_END}]" > /dev/stderr
+                fi 
+            fi
+        done
+        export IFS=$OLD_IFS
+        write_changelog ""
+        write_changelog "${changelog_tail}"
+        # Replace main changelog with tmp
+        mv CHANGELOG.tmp CHANGELOG.md
+        # Store version number in VERSION text file
+        echo "${RELEASE_VERSION}" > VERSION
+
+        # Commit changes
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Committing changes" > /dev/stdout
+        git commit -q -am "Release version ${RELEASE_VERSION}" > /dev/null
+        if [ $? -ne 0 ]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Failed to commit changes" > /dev/stderr
+            exit 1
+        fi
+
+        # Publish release branch
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing the new release branch [${COLOR_YELLOW}release/${RELEASE_VERSION}${COLOR_END}] to remote" > /dev/stdout
+        git flow release publish "${RELEASE_VERSION}" > /dev/null
+
+    fi
+
+    read -n 1 -r -s -p "Do you want to finish a release? [y/N]: " FINISH
+    echo ""
+    if [ "${FINISH}" == "y" ] || [ "${FINISH}" == "Y" ]
+    then
+        local BRANCH_CURRENT
+        BRANCH_CURRENT=$(git rev-parse --abbrev-ref HEAD)
+        if [[ "${BRANCH_CURRENT}" != release/*.*.* ]]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You must be in a release branch to finish" > /dev/stderr
+            exit 1
+        fi
+        local RELEASE_VERSION
+        RELEASE_VERSION="${BRANCH_CURRENT/release\//}"
+        # Finish the new release version with git-flow ***********
+        # [GIT_MERGE_AUTOEDIT=no] for non interative release operation
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Finishing release branch [${COLOR_YELLOW}${BRANCH_CURRENT}${COLOR_END}]" > /dev/stdout
+        GIT_MERGE_AUTOEDIT=no git flow release finish -m "Release version ${VERSION_NEW}" "${VERSION_NEW}" > /dev/null
+
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote [${COLOR_YELLOW}$BRANCH_MAIN${COLOR_END}] branch" > /dev/stdout
+        git checkout -q "$BRANCH_MAIN"
+        git push -q
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
+        git checkout -q develop
+        git push -q
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing new tag [${COLOR_YELLOW}${RELEASE_VERSION}${COLOR_END}] to remote" > /dev/stdout
+        git checkout -q develop
+        git push -q origin "${RELEASE_VERSION}"
     fi
 }
 
@@ -145,19 +326,16 @@ then
     exit 1
 fi
 
-BRANCH_CURRENT=$(git rev-parse --abbrev-ref HEAD)
 
 
-
-ACTION=$(printf "feature\nrelease\nhotfix\nQUIT" | fzf --multi --height=90% --header="Select a flow type" --prompt="Select: ")
+ACTION=$(printf "feature\nrelease\nhotfix\nQUIT" | fzf --multi --height=90% --header="Select a flow type")
 
 case "${ACTION}" in
     "feature")
         make_feature || exit 1
-        
-        echo "Feature"
         ;;
     "release")
+        make_release || exit 1
         echo "Release"
         ;;
     "hotfix")
