@@ -491,7 +491,7 @@ case "${ACTION}" in
         echo "Quit"
         ;;
     *)
-        echo "Invalid option"
+        echo "Invalid option. Exiting..."
         exit 1
         ;;
 esac
