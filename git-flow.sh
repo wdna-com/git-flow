@@ -395,6 +395,7 @@ make_hotfix(){
         done
         export IFS=$OLD_IFS
         write_changelog ""
+        write_changelog "${changelog_tail}"
 
         # Replace main changelog with tmp
         mv CHANGELOG.tmp CHANGELOG.md
@@ -419,11 +420,6 @@ make_hotfix(){
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
         git checkout -q develop
         git push -q
-        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing new tag [${COLOR_YELLOW}${HOTFIX_VERSION}${COLOR_END}] to remote" > /dev/stdout
-        git checkout -q develop
-        git push -q origin "${HOTFIX_VERSION}"
-
-        # Push new tag
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing new tag [${COLOR_YELLOW}${HOTFIX_VERSION}${COLOR_END}] to remote" > /dev/stdout
         git checkout -q develop
         git push -q origin "${HOTFIX_VERSION}"
