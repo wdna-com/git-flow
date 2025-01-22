@@ -260,10 +260,8 @@ make_release() {
     then
         local BRANCH_CURRENT
         BRANCH_CURRENT=$(git rev-parse --abbrev-ref HEAD)
-        if [[ "${BRANCH_CURRENT}" == "release/*.*.*" ]]
+        if [[ "${BRANCH_CURRENT}" != release/*.*.* ]]
         then
-            echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: You are in a release branch [${COLOR_YELLOW}${BRANCH_CURRENT}${COLOR_END}]" > /dev/stdout
-        else
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You must be in a release branch to finish" > /dev/stderr
             exit 1
         fi
