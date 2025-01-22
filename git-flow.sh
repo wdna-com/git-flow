@@ -69,15 +69,14 @@ make_feature() {
             git checkout -q develop
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
-        git pull -q
+        git pull -q > /dev/null
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Creating a new feature branch..." > /dev/stdout
         read -rp "Enter feature number: " FEATURE_NUMBER
-        echo ""
         if [ -z "${FEATURE_NUMBER}" ]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Feature number cannot be empty" > /dev/stderr
             exit 1
-        elif  [ ! "${FEATURE_NUMBER}" =~ ^[0-9]+$ ]
+        elif  [[ ! "${FEATURE_NUMBER}" =~ ^[0-9]+$ ]]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Feature number must be a number" > /dev/stderr
             exit 1
@@ -96,14 +95,15 @@ make_feature() {
     if [ "${FINISH}" == "y" ] || [ "${FINISH}" == "Y" ]
     then
         local branch_feature=$(git for-each-ref --format='%(refname:short)' refs/heads/ | grep '^feature' | fzf --height=90% --header="Select a feature branch to finish")
-        if [[ "${branch_feature}" == "feature/#*" ]]
+        if [[ "${branch_feature}" != feature/#* ]]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You must select a feature branch to finish" > /dev/stderr
             exit 1
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Finishing feature branch [${COLOR_YELLOW}${branch_feature}${COLOR_END}]" > /dev/stdout
         local feature_number=$(echo "${branch_feature}" | grep -oP '#\K\d+')
-        git flow feature finish "#${feature_number}" > /dev/null
+        # [GIT_MERGE_AUTOEDIT=no] for non interative release operation
+        GIT_MERGE_AUTOEDIT=no git flow feature finish "#${feature_number}"
 
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote" > /dev/stdout
         git push -q
@@ -126,6 +126,7 @@ make_feature() {
         git pull -q
         # [GIT_MERGE_AUTOEDIT=no] for non interative release operation
         GIT_MERGE_AUTOEDIT=no git merge -q develop
+        git push -q
         exit 0
     fi
 }
@@ -176,8 +177,8 @@ make_release() {
         fi
         echo "${SEPARATOR1}"
 
-        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}master${COLOR_END}] branch" > /dev/stdout
-        git checkout -q master
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}${BRANCH_MAIN}${COLOR_END}] branch" > /dev/stdout
+        git checkout -q "${BRANCH_MAIN}"
         git pull -q
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
         git checkout -q develop
@@ -196,11 +197,13 @@ make_release() {
         fi
         # Extract git feature codes (sorted and unique only)
         local feature_list
-        feature_list=$(git log --pretty=oneline master..HEAD | grep "Merge branch 'feature/#" | sed -e "s/.*feature\/\([#0-9]*\).*/\1/" | sort -u)
-        # Remove spaces
-        feature_list=$(echo "${feature_list}" | tr -d ' ')
+        feature_list=$(git log --pretty=oneline ${BRANCH_MAIN}..HEAD | grep "Merge branch 'feature/#" | awk '{print $4}' | sed 's/feature\/#//')
+        # Remove quotes 
+        feature_list=$(echo "${feature_list}" | tr -d '"' | tr -d "'")
         # Sort feature codes by number
-        feature_list=$(echo "${feature_list}" | sed -e $'s/#/\\\n/g' | sort -n | tr '\n' '#' | sed 's/.$//')
+        feature_list=$(echo "${feature_list}" | sort -n | uniq)
+        # convert to list
+        feature_list=$(echo "${feature_list}" | tr '\n' '#')
 
         # Generating temporary changelog ************************
         local changelog_head changelog_tail
@@ -254,6 +257,7 @@ make_release() {
 
     fi
 
+    echo "${SEPARATOR1}"
     read -n 1 -r -s -p "Do you want to finish a release? [y/N]: " FINISH
     echo ""
     if [ "${FINISH}" == "y" ] || [ "${FINISH}" == "Y" ]
@@ -272,8 +276,8 @@ make_release() {
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Finishing release branch [${COLOR_YELLOW}${BRANCH_CURRENT}${COLOR_END}]" > /dev/stdout
         GIT_MERGE_AUTOEDIT=no git flow release finish -m "Release version ${VERSION_NEW}" "${VERSION_NEW}" > /dev/null
 
-        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote [${COLOR_YELLOW}master${COLOR_END}] branch" > /dev/stdout
-        git checkout -q master
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote [${COLOR_YELLOW}$BRANCH_MAIN${COLOR_END}] branch" > /dev/stdout
+        git checkout -q "$BRANCH_MAIN"
         git push -q
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
         git checkout -q develop
@@ -337,10 +341,9 @@ case "${ACTION}" in
         ;;
     "release")
         make_release || exit 1
-        echo "Release"
         ;;
     "hotfix")
-        echo "Hotfix"
+        make_hotfix || exit 1
         ;;
     "QUIT")
         echo "Quit"
