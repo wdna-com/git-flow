@@ -96,10 +96,17 @@ make_feature() {
     if [ "${FINISH}" == "y" ] || [ "${FINISH}" == "Y" ]
     then
         local branch_feature=$(git for-each-ref --format='%(refname:short)' refs/heads/ | grep '^feature' | fzf --height=90% --header="Select a feature branch to finish")
-        if [[ "${branch_feature}" == "feature/#*" ]]
+        if [[ "${branch_feature}" != feature/#* ]]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You must select a feature branch to finish" > /dev/stderr
             exit 1
+        fi
+        local BRANCH_CURRENT
+        BRANCH_CURRENT=$(git rev-parse --abbrev-ref HEAD)
+        if [ "${BRANCH_CURRENT}" != "${branch_feature}" ]
+        then
+            echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Switching to [${COLOR_YELLOW}${branch_feature}${COLOR_END}] branch" > /dev/stdout
+            git checkout -q "${branch_feature}"
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Finishing feature branch [${COLOR_YELLOW}${branch_feature}${COLOR_END}]" > /dev/stdout
         local feature_number=$(echo "${branch_feature}" | grep -oP '#\K\d+')
