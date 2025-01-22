@@ -176,8 +176,8 @@ make_release() {
         fi
         echo "${SEPARATOR1}"
 
-        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}master${COLOR_END}] branch" > /dev/stdout
-        git checkout -q master
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}${BRANCH_MAIN}${COLOR_END}] branch" > /dev/stdout
+        git checkout -q "${BRANCH_MAIN}"
         git pull -q
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
         git checkout -q develop
@@ -196,11 +196,11 @@ make_release() {
         fi
         # Extract git feature codes (sorted and unique only)
         local feature_list
-        feature_list=$(git log --pretty=oneline master..HEAD | grep "Merge branch 'feature/#" | sed -e "s/.*feature\/\([#0-9]*\).*/\1/" | sort -u)
-        # Remove spaces
-        feature_list=$(echo "${feature_list}" | tr -d ' ')
+        feature_list=$(git log --pretty=oneline ${BRANCH_MAIN}..HEAD | grep "Merge branch 'feature/#" | awk '{print $4}' | sed 's/feature\/#//')
+        # Remove quotes 
+        feature_list=$(echo "${feature_list}" | tr -d '"' | tr -d "'")
         # Sort feature codes by number
-        feature_list=$(echo "${feature_list}" | sed -e $'s/#/\\\n/g' | sort -n | tr '\n' '#' | sed 's/.$//')
+        feature_list=$(echo "${feature_list}" | sort -n | uniq)
 
         # Generating temporary changelog ************************
         local changelog_head changelog_tail
@@ -272,8 +272,8 @@ make_release() {
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Finishing release branch [${COLOR_YELLOW}${BRANCH_CURRENT}${COLOR_END}]" > /dev/stdout
         GIT_MERGE_AUTOEDIT=no git flow release finish -m "Release version ${VERSION_NEW}" "${VERSION_NEW}" > /dev/null
 
-        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote [${COLOR_YELLOW}master${COLOR_END}] branch" > /dev/stdout
-        git checkout -q master
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote [${COLOR_YELLOW}$BRANCH_MAIN${COLOR_END}] branch" > /dev/stdout
+        git checkout -q "$BRANCH_MAIN"
         git push -q
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
         git checkout -q develop
