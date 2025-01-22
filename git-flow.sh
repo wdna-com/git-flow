@@ -119,8 +119,9 @@ make_feature() {
             exit 1
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Updating feature branch [${COLOR_YELLOW}${branch_feature}${COLOR_END}]" > /dev/stdout
-        local feature_number=$(echo "${branch_feature}" | grep -oP '#\K\d+')
-        git flow feature pull "#${feature_number}" > /dev/null
+        git checkout -q "${branch_feature}"
+        git pull -q
+        git merge -q develop
         exit 0
     fi
 }
