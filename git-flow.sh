@@ -77,7 +77,7 @@ make_feature() {
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Feature number cannot be empty" > /dev/stderr
             exit 1
-        elif  [ ! "${FEATURE_NUMBER}" =~ ^[0-9]+$ ]
+        elif  [[ ! "${FEATURE_NUMBER}" =~ ^[0-9]+$ ]]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Feature number must be a number" > /dev/stderr
             exit 1
