@@ -202,6 +202,8 @@ make_release() {
         feature_list=$(echo "${feature_list}" | tr -d '"' | tr -d "'")
         # Sort feature codes by number
         feature_list=$(echo "${feature_list}" | sort -n | uniq)
+        # convert to list
+        feature_list=$(echo "${feature_list}" | tr '\n' ' ')
 
         # Generating temporary changelog ************************
         local changelog_head changelog_tail
