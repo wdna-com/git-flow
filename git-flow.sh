@@ -69,8 +69,10 @@ make_feature() {
             git checkout -q develop
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
+        git pull -q
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Creating a new feature branch..." > /dev/stdout
         read -rp "Enter feature number: " FEATURE_NUMBER
+        echo ""
         if [ -z "${FEATURE_NUMBER}" ]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Feature number cannot be empty" > /dev/stderr
@@ -81,9 +83,9 @@ make_feature() {
             exit 1
         else
             echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Creating a new feature branch  [${COLOR_YELLOW}feature/#${FEATURE_NUMBER}${COLOR_END}]" > /dev/stdout
-            git flow feature start "#${FEATURE_NUMBER}"
+            git flow feature start "#${FEATURE_NUMBER}" > /dev/null
             echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing the new feature branch [${COLOR_YELLOW}feature/#${FEATURE_NUMBER}${COLOR_END}] to remote" > /dev/stdout
-            git flow feature publish "#${FEATURE_NUMBER}"
+            git flow feature publish "#${FEATURE_NUMBER}" > /dev/null
             exit 0
         fi
     fi
@@ -93,17 +95,18 @@ make_feature() {
     echo ""
     if [ "${FINISH}" == "y" ] || [ "${FINISH}" == "Y" ]
     then
-        local branch_feature=$(git branch --list "feature/#*" | fzf --height=90% --header="Select a feature branch to finish" --prompt="Select: ")
-        if [ ! "${branch_feature}" ~= "feature/#*" ]
+        local branch_feature=$(git for-each-ref --format='%(refname:short)' refs/heads/ | grep '^feature' | fzf --height=90% --header="Select a feature branch to finish")
+        if [[ "${branch_feature}" == "feature/#*" ]]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You must select a feature branch to finish" > /dev/stderr
             exit 1
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Finishing feature branch [${COLOR_YELLOW}${branch_feature}${COLOR_END}]" > /dev/stdout
-        git flow feature finish "${branch_feature}"
+        local feature_number=$(echo "${branch_feature}" | grep -oP '#\K\d+')
+        git flow feature finish "#${feature_number}" > /dev/null
 
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote" > /dev/stdout
-        git push origin develop
+        git push -q
         exit 0
     fi
 
@@ -325,13 +328,11 @@ fi
 
 
 
-ACTION=$(printf "feature\nrelease\nhotfix\nQUIT" | fzf --multi --height=90% --header="Select a flow type" --prompt="Select: ")
+ACTION=$(printf "feature\nrelease\nhotfix\nQUIT" | fzf --multi --height=90% --header="Select a flow type")
 
 case "${ACTION}" in
     "feature")
         make_feature || exit 1
-        
-        echo "Feature"
         ;;
     "release")
         make_release || exit 1
