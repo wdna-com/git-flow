@@ -101,16 +101,9 @@ make_feature() {
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You must select a feature branch to finish" > /dev/stderr
             exit 1
         fi
-        local BRANCH_CURRENT
-        BRANCH_CURRENT=$(git rev-parse --abbrev-ref HEAD)
-        if [ "${BRANCH_CURRENT}" != "${branch_feature}" ]
-        then
-            echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Switching to [${COLOR_YELLOW}${branch_feature}${COLOR_END}] branch" > /dev/stdout
-            git checkout -q "${branch_feature}"
-        fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Finishing feature branch [${COLOR_YELLOW}${branch_feature}${COLOR_END}]" > /dev/stdout
         local feature_number=$(echo "${branch_feature}" | grep -oP '#\K\d+')
-        git flow feature finish "#${feature_number}" > /dev/null
+        git flow feature finish "#${feature_number}"
 
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote" > /dev/stdout
         git push -q
