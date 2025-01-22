@@ -102,7 +102,8 @@ make_feature() {
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Finishing feature branch [${COLOR_YELLOW}${branch_feature}${COLOR_END}]" > /dev/stdout
         local feature_number=$(echo "${branch_feature}" | grep -oP '#\K\d+')
-        git flow feature finish "#${feature_number}"
+        # [GIT_MERGE_AUTOEDIT=no] for non interative release operation
+        GIT_MERGE_AUTOEDIT=no git flow feature finish "#${feature_number}"
 
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote" > /dev/stdout
         git push -q
