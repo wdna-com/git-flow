@@ -126,6 +126,7 @@ make_feature() {
         git pull -q
         # [GIT_MERGE_AUTOEDIT=no] for non interative release operation
         GIT_MERGE_AUTOEDIT=no git merge -q develop
+        git push -q
         exit 0
     fi
 }
