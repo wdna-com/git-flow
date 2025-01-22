@@ -58,6 +58,7 @@ write_changelog() {
 make_feature() {
     # Check if the user wants to start a new feature
     read -n 1 -r -s -p "Do you want to create a new feature? [y/N]: " CREATE
+    echo ""
     if [ "${CREATE}" == "y" ] || [ "${CREATE}" == "Y" ]
     then
         local BRANCH_CURRENT
@@ -89,6 +90,7 @@ make_feature() {
 
     # Check if the user wants to finish a feature
     read -n 1 -r -s -p "Do you want to finish a feature? [y/N]: " FINISH
+    echo ""
     if [ "${FINISH}" == "y" ] || [ "${FINISH}" == "Y" ]
     then
         local branch_feature=$(git branch --list "feature/#*" | fzf --height=90% --header="Select a feature branch to finish" --prompt="Select: ")
