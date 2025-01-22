@@ -203,7 +203,7 @@ make_release() {
         # Sort feature codes by number
         feature_list=$(echo "${feature_list}" | sort -n | uniq)
         # convert to list
-        feature_list=$(echo "${feature_list}" | tr '\n' ' ')
+        feature_list=$(echo "${feature_list}" | tr '\n' '#')
 
         # Generating temporary changelog ************************
         local changelog_head changelog_tail
@@ -257,6 +257,7 @@ make_release() {
 
     fi
 
+    echo "${SEPARATOR1}"
     read -n 1 -r -s -p "Do you want to finish a release? [y/N]: " FINISH
     echo ""
     if [ "${FINISH}" == "y" ] || [ "${FINISH}" == "Y" ]
