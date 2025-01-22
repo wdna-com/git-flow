@@ -169,7 +169,7 @@ make_release() {
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Release version cannot be empty" > /dev/stderr
             exit 1
-        elif [ ! "${RELEASE_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]
+        elif [[ ! "${RELEASE_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Release version must be in the format [${COLOR_YELLOW}x.x.x${COLOR_END}]" > /dev/stderr
             exit 1
@@ -260,7 +260,7 @@ make_release() {
     then
         local BRANCH_CURRENT
         BRANCH_CURRENT=$(git rev-parse --abbrev-ref HEAD)
-        if [[ "${BRANCH_CURRENT}" != "release/*.*.*" ]]
+        if [[ ! "${BRANCH_CURRENT}" == "release/*.*.*" ]]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You must be in a release branch to finish" > /dev/stderr
             exit 1
