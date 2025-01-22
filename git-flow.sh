@@ -124,7 +124,8 @@ make_feature() {
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Updating feature branch [${COLOR_YELLOW}${branch_feature}${COLOR_END}]" > /dev/stdout
         git checkout -q "${branch_feature}"
         git pull -q
-        git merge -q develop
+        # [GIT_MERGE_AUTOEDIT=no] for non interative release operation
+        GIT_MERGE_AUTOEDIT=no git merge -q develop
         exit 0
     fi
 }
