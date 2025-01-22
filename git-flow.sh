@@ -69,10 +69,9 @@ make_feature() {
             git checkout -q develop
         fi
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
-        git pull -q
+        git pull -q > /dev/null
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Creating a new feature branch..." > /dev/stdout
         read -rp "Enter feature number: " FEATURE_NUMBER
-        echo ""
         if [ -z "${FEATURE_NUMBER}" ]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Feature number cannot be empty" > /dev/stderr
