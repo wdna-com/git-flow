@@ -427,6 +427,7 @@ make_hotfix(){
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing new tag [${COLOR_YELLOW}${HOTFIX_VERSION}${COLOR_END}] to remote" > /dev/stdout
         git checkout -q develop
         git push -q origin "${HOTFIX_VERSION}"
+    fi
 }
 
 
