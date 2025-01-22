@@ -338,10 +338,9 @@ case "${ACTION}" in
         ;;
     "release")
         make_release || exit 1
-        echo "Release"
         ;;
     "hotfix")
-        echo "Hotfix"
+        make_hotfix || exit 1
         ;;
     "QUIT")
         echo "Quit"
