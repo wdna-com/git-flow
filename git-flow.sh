@@ -484,10 +484,15 @@ case "${ACTION}" in
         make_hotfix || exit 1
         ;;
     "QUIT")
-        echo "Quit"
+        echo "Quit "
         ;;
     *)
         echo "Invalid option. Exiting..."
         exit 1
         ;;
 esac
+
+
+
+
+
