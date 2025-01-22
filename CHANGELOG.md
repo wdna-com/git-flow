@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 ---
 
+## [3.0.0] - 2025-01-22
+
 ## [2.0.0] - 2025-01-22
 - 1010: 
 - 72196: Levantar infraestructura para realizar pruebas de airflow

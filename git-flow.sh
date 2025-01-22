@@ -56,6 +56,7 @@ write_changelog() {
 }
 
 make_feature() {
+    echo "${SEPARATOR1}"
     # Check if the user wants to start a new feature
     read -n 1 -r -s -p "Do you want to create a new feature? [y/N]: " CREATE
     echo ""
@@ -89,6 +90,7 @@ make_feature() {
         fi
     fi
 
+    echo "${SEPARATOR1}"
     # Check if the user wants to finish a feature
     read -n 1 -r -s -p "Do you want to finish a feature? [y/N]: " FINISH
     echo ""
@@ -110,6 +112,7 @@ make_feature() {
         exit 0
     fi
 
+    echo "${SEPARATOR1}"
     # Check if the user wants to update a feature
     read -n 1 -r -s -p "Do you want to update a feature? [y/N]: " UPDATE
     echo ""
@@ -132,6 +135,7 @@ make_feature() {
 }
 
 make_release() {
+    echo "${SEPARATOR1}"
     read -n 1 -r -s -p "Do you want to create a new release? [y/N]: " CREATE
     echo ""
     if [ "${CREATE}" == "y" ] || [ "${CREATE}" == "Y" ]
@@ -285,6 +289,144 @@ make_release() {
         echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing new tag [${COLOR_YELLOW}${RELEASE_VERSION}${COLOR_END}] to remote" > /dev/stdout
         git checkout -q develop
         git push -q origin "${RELEASE_VERSION}"
+    fi
+}
+
+make_hotfix(){
+    echo "${SEPARATOR1}"
+    read -n 1 -r -s -p "Do you want to create a new hotfix? [y/N]: " CREATE
+    echo ""
+    if [ "${CREATE}" == "y" ] || [ "${CREATE}" == "Y" ]
+    then
+        local BRANCH_CURRENT
+        BRANCH_CURRENT=$(git rev-parse --abbrev-ref HEAD)
+        if [ "${BRANCH_CURRENT}" != "${BRANCH_MAIN}" ]
+        then
+            echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Switching to [${COLOR_YELLOW}${BRANCH_MAIN}${COLOR_END}] branch" > /dev/stdout
+            git checkout -q "${BRANCH_MAIN}"
+        fi
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}${BRANCH_MAIN}${COLOR_END}] branch" > /dev/stdout
+        git pull -q
+        local version_old
+        version_old=$(git tag --sort=v:refname | tail -1)
+        if [ -z "${version_old}" ]
+        then
+            version_old="0.0.0"
+        fi
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Creating a new hotfix branch..." > /dev/stdout
+        read -rp "Enter hotfix version [latest version: ${version_old}]: " HOTFIX_VERSION
+
+        if [ -z "${HOTFIX_VERSION}" ]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Hotfix version cannot be empty" > /dev/stderr
+            exit 1
+        elif [[ ! "${HOTFIX_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Hotfix version must be in the format [${COLOR_YELLOW}x.x.x${COLOR_END}]" > /dev/stderr
+            exit 1
+        fi
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}${BRANCH_MAIN}${COLOR_END}] branch" > /dev/stdout
+        git checkout -q "${BRANCH_MAIN}"
+        git pull -q
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pulling changes from remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
+        git checkout -q develop
+        git pull -q
+
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Creating a new hotfix branch  [${COLOR_YELLOW}hotfix/${HOTFIX_VERSION}${COLOR_END}]" > /dev/stdout
+        git flow hotfix start "${HOTFIX_VERSION}" > /dev/null
+        if [ $? -ne 0 ]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Failed to create a new hotfix branch" > /dev/stderr
+            exit 1
+        fi
+        # Store version number in VERSION text file
+        echo "${HOTFIX_VERSION}" > VERSION
+        # Commit last changes
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Committing changes" > /dev/stdout
+        git commit -q -am "Hotfix version ${HOTFIX_VERSION}" > /dev/null
+        if [ $? -ne 0 ]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Failed to commit changes" > /dev/stderr
+            exit 1
+        fi
+
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing the new hotfix branch [${COLOR_YELLOW}hotfix/${HOTFIX_VERSION}${COLOR_END}] to remote" > /dev/stdout
+        git flow hotfix publish "${HOTFIX_VERSION}" > /dev/null
+    fi
+
+    echo "${SEPARATOR1}"
+    read -n 1 -r -s -p "Do you want to finish a hotfix? [y/N]: " FINISH
+    echo ""
+     if [ "${FINISH}" == "y" ] || [ "${FINISH}" == "Y" ]
+    then
+        local BRANCH_CURRENT
+        BRANCH_CURRENT=$(git rev-parse --abbrev-ref HEAD)
+        if [[ "${BRANCH_CURRENT}" != hotfix/*.*.* ]]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: You must be in a hotfix branch to finish" > /dev/stderr
+            exit 1
+        fi
+
+        local HOTFIX_VERSION
+        HOTFIX_VERSION="${BRANCH_CURRENT/hotfix\//}"
+
+        # Generating temporary changelog ************************
+        local changelog_head changelog_tail
+        changelog_head=$(head -8 CHANGELOG.md)
+        changelog_tail=$(tail --lines=+10 CHANGELOG.md)
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Generating temporary changelog" > /dev/stdout
+        rm -f CHANGELOG.tmp
+        write_changelog "${changelog_head}"
+        write_changelog ""
+
+        # Extract git commit comments (sorted and unique only)
+        local commit_list
+        commit_list=$(git log --no-merges --reverse --first-parent "hotfix/${HOTFIX_VERSION}" --pretty=oneline --abbrev-commit --grep='\[.*\]' | sort -u)
+
+        write_changelog "## [${HOTFIX_VERSION}] - $(date +'%Y-%m-%d')"
+        OLD_IFS=$IFS
+        export IFS=$'\n'
+        for commit in ${commit_list}
+        do
+            if [ -n "${commit}" ]
+            then
+                write_changelog "- HOTFIX: ${commit}"
+            fi
+        done
+        export IFS=$OLD_IFS
+        write_changelog ""
+
+        # Replace main changelog with tmp
+        mv CHANGELOG.tmp CHANGELOG.md
+
+        # Commit changes
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Committing changes" > /dev/stdout
+        git commit -q -am "Hotfix version ${HOTFIX_VERSION}" > /dev/null
+        if [ $? -ne 0 ]
+        then
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Failed to commit changes" > /dev/stderr
+            exit 1
+        fi
+
+        # Finish the new release version with git-flow ***********
+	    # [GIT_MERGE_AUTOEDIT=no] for non interative release operation
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Finishing hotfix branch [${COLOR_YELLOW}${BRANCH_CURRENT}${COLOR_END}]" > /dev/stdout
+        GIT_MERGE_AUTOEDIT=no git flow hotfix finish -m "Hotfix version ${HOTFIX_VERSION}" "${HOTFIX_VERSION}" > /dev/null
+
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote [${COLOR_YELLOW}${BRANCH_MAIN}${COLOR_END}] branch" > /dev/stdout
+        git checkout -q "${BRANCH_MAIN}"
+        git push -q
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing changes to remote [${COLOR_YELLOW}develop${COLOR_END}] branch" > /dev/stdout
+        git checkout -q develop
+        git push -q
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing new tag [${COLOR_YELLOW}${HOTFIX_VERSION}${COLOR_END}] to remote" > /dev/stdout
+        git checkout -q develop
+        git push -q origin "${HOTFIX_VERSION}"
+
+        # Push new tag
+        echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Pushing new tag [${COLOR_YELLOW}${HOTFIX_VERSION}${COLOR_END}] to remote" > /dev/stdout
+        git checkout -q develop
+        git push -q origin "${HOTFIX_VERSION}"
     fi
 }
 
