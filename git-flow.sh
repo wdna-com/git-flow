@@ -148,6 +148,9 @@ make_release() {
             exit 1
         fi
         RESPONSE=$(curl -sb -H "Content-Type: application/xml" -H "X-Redmine-API-Key: ${REDMINE_APIKEY}" "${REDMINE_URL}/issues.xml?limit=1")
+        echo "${RESPONSE}"
+        echo "${RESPONSE}" | grep -q "<issue>"
+        echo $?
         if [ -z "${RESPONSE}" ]
         then
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Redmine API KEY is invalid" 
