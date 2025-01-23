@@ -476,6 +476,12 @@ then
     echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: git-flow is not initialized in this repository. Please run '${COLOR_YELLOW}git flow init${COLOR_END}'" > /dev/stderr
     exit 1
 fi
+# Check if VERSION and CHANGELOG.md files exist
+if [ ! -f VERSION ] || [ ! -f CHANGELOG.md ]
+then
+    echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Missing [${COLOR_YELLOW}VERSION${COLOR_END}] or [${COLOR_YELLOW}CHANGELOG.md${COLOR_END}] file" > /dev/stderr
+    exit 1
+fi
 
 
 
