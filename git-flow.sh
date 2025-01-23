@@ -232,9 +232,17 @@ make_release() {
                 then
                     local subject
                     subject=$(xmlstarlet select -t -v "//issue/subject/text()" <<< "$XML" )
+                    echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Adding feature [${COLOR_YELLOW}${feature}${COLOR_END}] to changelog" > /dev/stdout
                     write_changelog "- ${feature}: ${subject}"
                 else
                     echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: cannot retrieve redmine information of the feature: [${COLOR_YELLOW}${feature}${COLOR_END}]" > /dev/stderr
+                    read -n 1 -r -s -p "Do you want to continue? [y/N]: " CONTINUE
+                    echo ""
+                    if [ "${CONTINUE}" != "y" ] && [ "${CONTINUE}" != "Y" ]
+                    then
+                        echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Operation aborted by user" > /dev/stderr
+                        exit 1
+                    fi
                 fi 
             fi
         done
