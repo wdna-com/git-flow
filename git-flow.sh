@@ -147,18 +147,14 @@ make_release() {
             echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Redmine API KEY is mandatory to continue" 
             exit 1
         fi
-        RESPONSE=$(curl -s -H "Content-Type: application/xml" -H "X-Redmine-API-Key: ${REDMINE_APIKEY}" "${REDMINE_URL}/issues.xml?limit=1" | grep -o "<issue>")
+        RESPONSE=$(curl -sb -H "Content-Type: application/xml" -H "X-Redmine-API-Key: ${REDMINE_API_KEY}" "${REDMINE_URL}/issues.xml?limit=1")
 
-        echo "${REDMINE_API_KEY}"
-        echo "${RESPONSE}"
-        echo "${RESPONSE}" | grep -q "<issue>"
-        echo $?
-        if [ -z "${RESPONSE}" ]
+        if [ -n "${RESPONSE}" ]
         then
-            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Redmine API KEY is invalid" 
-            exit 1
+            echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Redmine API KEY is valid"
         else
-            echo -e "- [${COLOR_YELLOW}INFO${COLOR_END}]: Redmine API KEY is valid" 
+            echo -e "- [${COLOR_RED}ERROR${COLOR_END}]: Redmine API KEY is invalid"
+            exit 1
         fi
         local BRANCH_CURRENT
         BRANCH_CURRENT=$(git rev-parse --abbrev-ref HEAD)
