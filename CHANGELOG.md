@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 ---
 
+## [3.2.3] - 2025-02-05
+- HOTFIX: 4b76372 [FIX] --no-decorate
+- HOTFIX: ebbd9fc [FIX] finish hotfix
+
 ## [3.2.2] - 2025-02-05
 - HOTFIX: 0b085fb [UPD] DUMMY3
 - HOTFIX: 11ba8c2 [UPD]
