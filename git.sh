@@ -371,7 +371,7 @@ _gitflow_start_release() {
         fi
         # Extract git feature codes (sorted and unique only)
         local feature_list
-        feature_list=$(git log --pretty=oneline ${BRANCH_MAIN}..HEAD | grep "Merge branch 'feature/#" | awk '{print $4}' | sed 's/feature\/#//')
+        feature_list=$(git log --pretty=oneline --no-decorate ${BRANCH_MAIN}..HEAD  | grep "Merge branch 'feature/#" | awk '{print $4}' | sed 's/feature\/#//')
         # Remove quotes 
         feature_list=$(echo "${feature_list}" | tr -d '"' | tr -d "'")
         # Sort feature codes by number
@@ -549,7 +549,7 @@ _gitflow_finish_hotfix() {
     write_changelog ""
 
     # Extract git commit comments (sorted and unique only)
-    local commit_list=$(git log --no-merges --reverse --first-parent "${BRANCH_MAIN}..hotfix/${HOTFIX_VERSION}" --pretty=oneline --abbrev-commit --grep='\[.*\]' | sort -u)
+    local commit_list=$(git log --no-merges --reverse --first-parent "${BRANCH_MAIN}..HEAD" --pretty=oneline --abbrev-commit --no-decorate --grep='\[.*\]' | sort -u)
     write_changelog "## [${HOTFIX_VERSION}] - $(date +'%Y-%m-%d')"
     OLD_IFS=$IFS
     export IFS=$'\n'
