@@ -458,8 +458,10 @@ _gitflow_finish_release() {
     echo -e "- [${YELLOW}${INFO}${NC}]: Finishing the current release branch..."
     # [GIT_MERGE_AUTOEDIT=no] for non interative release operation
     GIT_MERGE_AUTOEDIT=no git flow release finish -m "Release version ${RELEASE_VERSION}" > /dev/null
-    echo -e "- [${YELLOW}${INFO}${NC}]: Pushing changes to remote repository..."
-    git push -q
+    echo -e "- [${YELLOW}${INFO}${NC}]: Pushing changes to remote [${YELLOW}${BRANCH_MAIN}${NC}] branch..."
+    git push origin "${BRANCH_MAIN}" -q
+    echo -e "- [${YELLOW}${INFO}${NC}]: Pushing changes to remote [${YELLOW}develop${NC}] branch..."
+    git push origin develop -q
     echo -e "- [${GREEN}${SUCCESS}${NC}]: Release branch finished successfully."
     echo -e "${SEPARATOR2}"
     exit 0
