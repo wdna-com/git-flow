@@ -298,12 +298,17 @@ _gitflow_finish_feature() {
         echo -e "- [${RED}${ERROR}${NC}]: You must be on a feature branch to finish a feature." > /dev/stderr
         exit 1
     fi
+    local old_branch
+    old_branch=$(git branch --show-current)
+    echo -e "- [${YELLOW}${INFO}${NC}]: Changing to [${YELLOW}develop${NC}] branch..."
+    git checkout develop -q
     echo -e "- [${YELLOW}${INFO}${NC}]: Pulling latest changes from [${YELLOW}develop${NC}] branch..."
     git pull origin develop -q
+    echo -e "- [${YELLOW}${INFO}${NC}]: Changing to [${YELLOW}${old_branch}${NC}] branch..."
+    git checkout "${old_branch}" -q
     echo -e "- [${YELLOW}${INFO}${NC}]: Finishing the current feature branch..."
-    git flow feature finish > /dev/null
     # [GIT_MERGE_AUTOEDIT=no] for non interative release operation
-    GIT_MERGE_AUTOEDIT=no git flow feature finish "#$(git branch --show-current | grep -oP '#\K\d+')" > /dev/null
+    GIT_MERGE_AUTOEDIT=no git flow feature finish  -m "Merge branch '${old_branch}' into develop" > /dev/null
     echo -e "- [${YELLOW}${INFO}${NC}]: Pushing changes to remote repository..."
     git push -q
     echo -e "- [${GREEN}${SUCCESS}${NC}]: Feature branch finished successfully."
