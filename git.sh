@@ -308,7 +308,7 @@ _gitflow_finish_feature() {
     git checkout "${old_branch}" -q
     echo -e "- [${YELLOW}${INFO}${NC}]: Finishing the current feature branch..."
     # [GIT_MERGE_AUTOEDIT=no] for non interative release operation
-    GIT_MERGE_AUTOEDIT=no git flow feature finish  -m "Merge branch '${old_branch}' into develop" > /dev/null
+    GIT_MERGE_AUTOEDIT=no git flow feature finish > /dev/null
     echo -e "- [${YELLOW}${INFO}${NC}]: Pushing changes to remote repository..."
     git push -q
     echo -e "- [${GREEN}${SUCCESS}${NC}]: Feature branch finished successfully."
