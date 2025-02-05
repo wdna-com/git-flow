@@ -451,9 +451,8 @@ _gitflow_finish_release() {
     echo -e "- [${YELLOW}${INFO}${NC}]: Pulling latest changes from [${YELLOW}develop${NC}] branch..."
     git pull origin develop -q
     echo -e "- [${YELLOW}${INFO}${NC}]: Finishing the current release branch..."
-    git flow release finish > /dev/null
     # [GIT_MERGE_AUTOEDIT=no] for non interative release operation
-    GIT_MERGE_AUTOEDIT=no git flow release finish "$(cat VERSION)" > /dev/null
+    GIT_MERGE_AUTOEDIT=no git flow release finish -m "Release version ${RELEASE_VERSION}" > /dev/null
     echo -e "- [${YELLOW}${INFO}${NC}]: Pushing changes to remote repository..."
     git push -q
     echo -e "- [${GREEN}${SUCCESS}${NC}]: Release branch finished successfully."
