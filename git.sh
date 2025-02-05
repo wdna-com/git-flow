@@ -537,8 +537,8 @@ _gitflow_finish_hotfix() {
     git pull origin "${BRANCH_MAIN}" -q
     echo -e "- [${YELLOW}${INFO}${NC}]: Pulling latest changes from [${YELLOW}develop${NC}] branch..."
     git pull origin develop -q
-    local hotfix_version
-    hotfix_version=$(git branch --show-current | grep -oP '\d+\.\d+\.\d+')
+    local HOTFIX_VERSION
+    HOTFIX_VERSION=$(git branch --show-current | grep -oP '\d+\.\d+\.\d+')
     # Generating temporary changelog ************************
     local changelog_head changelog_tail
     changelog_head=$(head -8 CHANGELOG.md)
@@ -549,7 +549,7 @@ _gitflow_finish_hotfix() {
     write_changelog ""
 
     # Extract git commit comments (sorted and unique only)
-    local commit_list=$(git log --no-merges --reverse --first-parent "hotfix/${hotfix_version}" --pretty=oneline --abbrev-commit --grep='\[.*\]' | sort -u)
+    local commit_list=$(git log --no-merges --reverse --first-parent "hotfix/${HOTFIX_VERSION}" --pretty=oneline --abbrev-commit --grep='\[.*\]' | sort -u)
     write_changelog "## [${HOTFIX_VERSION}] - $(date +'%Y-%m-%d')"
     OLD_IFS=$IFS
     export IFS=$'\n'
@@ -567,17 +567,17 @@ _gitflow_finish_hotfix() {
     # Replace main changelog with tmp
     mv CHANGELOG.tmp CHANGELOG.md
     # Commit changes
-    echo -e "- [${YELLOW}${INFO}${NC}]: Committing changes to [${YELLOW}hotfix/${hotfix_version}${NC}] branch..."
-    git commit -am "Hotfix version ${hotfix_version}" > /dev/null
+    echo -e "- [${YELLOW}${INFO}${NC}]: Committing changes to [${YELLOW}hotfix/${HOTFIX_VERSION}${NC}] branch..."
+    git commit -am "Hotfix version ${HOTFIX_VERSION}" > /dev/null
     if [ $? -ne 0 ]
     then
-        echo -e "- [${RED}${ERROR}${NC}]: Hotfix branch [${YELLOW}hotfix/${hotfix_version}${NC}] failed to commit changes" > /dev/stderr
+        echo -e "- [${RED}${ERROR}${NC}]: Hotfix branch [${YELLOW}hotfix/${HOTFIX_VERSION}${NC}] failed to commit changes" > /dev/stderr
         exit 1
     fi
     # Finish the new release version with git-flow ***********
     # [GIT_MERGE_AUTOEDIT=no] for non interative release operation
     echo -e "- [${YELLOW}${INFO}${NC}]: Finishing the current hotfix branch..."
-    GIT_MERGE_AUTOEDIT=no git flow hotfix finish -m "Hotfix version ${hotfix_version}" > /dev/null
+    GIT_MERGE_AUTOEDIT=no git flow hotfix finish -m "Hotfix version ${HOTFIX_VERSION}" > /dev/null
     echo -e "- [${YELLOW}${INFO}${NC}]: Pushing changes to remote [${YELLOW}${BRANCH_MAIN}${NC}] branch..."
     git push origin "${BRANCH_MAIN}" -q
     echo -e "- [${YELLOW}${INFO}${NC}]: Pushing changes to remote [${YELLOW}develop${NC}] branch..."
