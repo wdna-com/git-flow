@@ -267,8 +267,7 @@ _gitflow_start_feature() {
     fi
     echo -e "- [${YELLOW}${INFO}${NC}]: Pulling latest changes from [${YELLOW}develop${NC}] branch..."
     git pull origin develop -q
-    echo -e "- [${YELLOW}${INFO}${NC}]: Creating a new feature branch..." 
-    read -rp "$(echo -e ${BLUE}Enter feature number: ${NC})" FEATURE_NUMBER
+    read -rp "$(echo -e - [${YELLOW}${INFO}${NC}]: Creating a new feature branch...${BLUE}Enter feature number: ${NC})" FEATURE_NUMBER
     if [ -z "${FEATURE_NUMBER}" ]
     then
         echo -e "- [${RED}${ERROR}${NC}]: Feature number cannot be empty" > /dev/stderr
