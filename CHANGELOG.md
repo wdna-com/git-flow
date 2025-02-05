@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 ---
 
+## [3.2.0] - 2025-02-05
+- 72119 - [CERAGONTX] Automatizar lanzamiento SNMP v2/v3 para extraer información vlan
+- 72545 - Investigar la clusterización del motor de base de datos MySQL
+
 ## [3.1.0] - 2025-01-23
 
 ## [3.0.3] - 2025-01-22
