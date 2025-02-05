@@ -266,7 +266,7 @@ _gitflow_start_feature() {
         exit 1
     fi
     echo -e "- [${YELLOW}${INFO}${NC}]: Pulling latest changes from [${YELLOW}develop${NC}] branch..."
-    git pull origin develop
+    git pull origin develop -q
     echo -e "- [${YELLOW}${INFO}${NC}]: Creating a new feature branch..." 
     read -rp "$(echo -e ${BLUE}Enter feature number: ${NC})" FEATURE_NUMBER
     if [ -z "${FEATURE_NUMBER}" ]
@@ -299,7 +299,7 @@ _gitflow_finish_feature() {
         exit 1
     fi
     echo -e "- [${YELLOW}${INFO}${NC}]: Pulling latest changes from [${YELLOW}develop${NC}] branch..."
-    git pull origin develop
+    git pull origin develop -q
     echo -e "- [${YELLOW}${INFO}${NC}]: Finishing the current feature branch..."
     git flow feature finish > /dev/null
     # [GIT_MERGE_AUTOEDIT=no] for non interative release operation
@@ -354,9 +354,9 @@ _gitflow_start_release() {
         exit 1
     else
         echo -e "- [${YELLOW}${INFO}${NC}]: Pulling latest changes from [${YELLOW}${BRANCH_MAIN}${NC}] branch..."
-        git pull origin "${BRANCH_MAIN}"
+        git pull origin "${BRANCH_MAIN}" -q
         echo -e "- [${YELLOW}${INFO}${NC}]: Pulling latest changes from [${YELLOW}develop${NC}] branch..."
-        git pull origin develop
+        git pull origin develop -q
         echo -e "- [${YELLOW}${INFO}${NC}]: Creating a new release branch [${YELLOW}release/${RELEASE_VERSION}${NC}] from [${YELLOW}develop${NC}] branch..." 
         git flow release start "${RELEASE_VERSION}" > /dev/null
         if [ $? -ne 0 ]
@@ -447,9 +447,9 @@ _gitflow_finish_release() {
         exit 1
     fi
     echo -e "- [${YELLOW}${INFO}${NC}]: Pulling latest changes from [${YELLOW}${BRANCH_MAIN}${NC}] branch..."
-    git pull origin "${BRANCH_MAIN}"
+    git pull origin "${BRANCH_MAIN}" -q
     echo -e "- [${YELLOW}${INFO}${NC}]: Pulling latest changes from [${YELLOW}develop${NC}] branch..."
-    git pull origin develop
+    git pull origin develop -q
     echo -e "- [${YELLOW}${INFO}${NC}]: Finishing the current release branch..."
     git flow release finish > /dev/null
     # [GIT_MERGE_AUTOEDIT=no] for non interative release operation
@@ -489,9 +489,9 @@ _gitflow_start_hotfix() {
         exit 1
     else
         echo -e "- [${YELLOW}${INFO}${NC}]: Pulling latest changes from [${YELLOW}${BRANCH_MAIN}${NC}] branch..."
-        git pull origin "${BRANCH_MAIN}"
+        git pull origin "${BRANCH_MAIN}" -q
         echo -e "- [${YELLOW}${INFO}${NC}]: Pulling latest changes from [${YELLOW}develop${NC}] branch..."
-        git pull origin develop
+        git pull origin develop -q
 
         echo -e "- [${YELLOW}${INFO}${NC}]: Creating a new hotfix branch  [${YELLOW}hotfix/${HOTFIX_VERSION}${NC}] from [${YELLOW}${BRANCH_MAIN}${NC}] branch..." 
         git flow hotfix start "${HOTFIX_VERSION}" > /dev/null
@@ -528,9 +528,9 @@ _gitflow_finish_hotfix() {
         exit 1
     fi
     echo -e "- [${YELLOW}${INFO}${NC}]: Pulling latest changes from [${YELLOW}${BRANCH_MAIN}${NC}] branch..."
-    git pull origin "${BRANCH_MAIN}"
+    git pull origin "${BRANCH_MAIN}" -q
     echo -e "- [${YELLOW}${INFO}${NC}]: Pulling latest changes from [${YELLOW}develop${NC}] branch..."
-    git pull origin develop
+    git pull origin develop -q
     local hotfix_version
     hotfix_version=$(git branch --show-current | grep -oP '\d+\.\d+\.\d+')
     # Generating temporary changelog ************************
@@ -573,9 +573,9 @@ _gitflow_finish_hotfix() {
     echo -e "- [${YELLOW}${INFO}${NC}]: Finishing the current hotfix branch..."
     GIT_MERGE_AUTOEDIT=no git flow hotfix finish -m "Hotfix version ${hotfix_version}" > /dev/null
     echo -e "- [${YELLOW}${INFO}${NC}]: Pushing changes to remote [${YELLOW}${BRANCH_MAIN}${NC}] branch..."
-    git push origin "${BRANCH_MAIN}"
+    git push origin "${BRANCH_MAIN}" -q
     echo -e "- [${YELLOW}${INFO}${NC}]: Pushing changes to remote [${YELLOW}develop${NC}] branch..."
-    git push origin develop
+    git push origin develop -q
     echo -e "- [${GREEN}${SUCCESS}${NC}]: Hotfix branch finished successfully."
     echo -e "${SEPARATOR2}"
     exit 0
