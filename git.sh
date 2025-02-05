@@ -549,7 +549,7 @@ _gitflow_finish_hotfix() {
     write_changelog ""
 
     # Extract git commit comments (sorted and unique only)
-    local commit_list=$(git log --no-merges --reverse --first-parent "hotfix/${HOTFIX_VERSION}" --pretty=oneline --abbrev-commit --grep='\[.*\]' | sort -u)
+    local commit_list=$(git log --no-merges --reverse --first-parent "${BRANCH_MAIN}..hotfix/${HOTFIX_VERSION}" --pretty=oneline --abbrev-commit --grep='\[.*\]' | sort -u)
     write_changelog "## [${HOTFIX_VERSION}] - $(date +'%Y-%m-%d')"
     OLD_IFS=$IFS
     export IFS=$'\n'
